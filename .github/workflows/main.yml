@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Flip Glassmorphism Calendar | தமிழ் & English</title>
+    <!-- Google Fonts for Inter & Noto Sans Tamil -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Tamil:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-gradient-1: #6d9fee;
+            --bg-gradient-2: #c48ceb;
+            --bg-gradient-3: #fca5a5;
+            --card-glass: rgba(255, 255, 255, 0.16);
+            --card-glass-hover: rgba(255, 255, 255, 0.22);
+            --card-border: rgba(255, 255, 255, 0.35);
+            --card-shadow: 0 25px 50px -12px rgba(22, 14, 48, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --text-muted: rgba(255, 255, 255, 0.65);
+            --accent-gold: #ffd166;
+            --accent-crimson: #ff5e7e;
+            --accent-cyan: #48cae4;
+            --font-family: 'Inter', 'Noto Sans Tamil', system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            overflow-y: auto;
+            color: var(--text-primary);
+            position: relative;
+            padding: 24px 16px;
+            user-select: none;
+            transition: background 0.8s ease;
+        }
+
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            pointer-events: none;
+            animation: floatOrb 18s ease-in-out infinite alternate;
+        }
+        .orb-1 {
+            width: 380px; height: 380px;
+            background: radial-gradient(circle, rgba(255, 222, 89, 0.75), rgba(255, 140, 66, 0.4));
+            top: -60px; right: 5%;
+            animation-duration: 22s;
+        }
+        .orb-2 {
+            width: 420px; height: 420px;
+            background: radial-gradient(circle, rgba(255, 107, 158, 0.75), rgba(162, 59, 214, 0.5));
+            top: 35%; left: -80px;
+            animation-duration: 19s;
+            animation-delay: -5s;
+        }
+        .orb-3 {
+            width: 460px; height: 460px;
+            background: radial-gradient(circle, rgba(78, 205, 196, 0.7), rgba(85, 98, 246, 0.5));
+            bottom: -90px; right: -60px;
+            animation-duration: 25s;
+            animation-delay: -10s;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, -30px) scale(1.08); }
+            100% { transform: translate(-30px, 40px) scale(0.95); }
+        }
+
+        .app-wrapper {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .top-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 9999px;
+            padding: 6px 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .theme-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .theme-dot:hover {
+            transform: scale(1.25);
+        }
+        .theme-dot.active {
+            box-shadow: 0 0 0 2px #fff, 0 0 10px rgba(255,255,255,0.8);
+            transform: scale(1.15);
+        }
+
+        .sound-toggle-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            opacity: 0.85;
+            transition: opacity 0.2s, background 0.2s;
+        }
+        .sound-toggle-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .scene {
+            width: 100%;
+            height: 680px;
+            perspective: 1600px;
+            position: relative;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: transform;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            background: var(--card-glass);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            border: 1px solid var(--card-border);
+            border-radius: 32px;
+            padding: 24px 22px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        /* Specular light sheen on glass */
+        .card-face::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(
+                125deg,
+                rgba(255, 255, 255, 0.25) 0%,
+                rgba(255, 255, 255, 0.08) 25%,
+                rgba(255, 255, 255, 0) 50%
+            );
+            pointer-events: none;
+            border-radius: 32px;
+        }
+
+        .card-face-back {
+            transform: rotateY(180deg);
+        }
+
+        .card-header {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .clock-display {
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 0.8px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.12);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: fit-content;
+        }
+        .clock-pulse {
+            width: 7px;
+            height: 7px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #22c55e;
+            animation: pulseDot 2s infinite;
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .nav-arrows {
+            display: flex;
+            gap: 6px;
+        }
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-1px);
+        }
+        .nav-btn:active {
+            transform: translateY(1px);
+        }
+
+        .header-title-section {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-top: 6px;
+            margin-bottom: 14px;
+        }
+
+        .month-name {
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+            line-height: 1.1;
+        }
+
+        .year-weekday-badge {
+            text-align: right;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.9;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            line-height: 1.35;
+        }
+        .year-weekday-badge .badge-sub {
+            font-size: 10px;
+            opacity: 0.75;
+        }
+
+        .calendar-grid-wrapper {
+            position: relative;
+            z-index: 2;
+        }
+
+        .grid-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            margin-bottom: 8px;
+            opacity: 0.85;
+            text-transform: uppercase;
+        }
+        .text-sunday {
+            color: var(--accent-crimson) !important;
+            font-weight: 800;
+        }
+
+        .grid-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: 36px;
+            gap: 4px 0;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .day-cell {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0.1, 1);
+            user-select: none;
+            margin: 0 2px;
+        }
+        .day-cell:hover:not(.empty) {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .day-cell.other-month {
+            opacity: 0.35;
+        }
+        .day-cell.today {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1.5px solid rgba(255, 255, 255, 0.9);
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+        }
+        .day-cell.selected {
+            background: #ffffff;
+            color: #4338ca !important;
+            font-weight: 800;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            transform: scale(1.05);
+        }
+        .day-cell.selected .event-dot {
+            background: #4338ca !important;
+        }
+
+        /* Event indicator lines and dots */
+        .event-indicator {
+            position: absolute;
+            bottom: 3px;
+            width: 14px;
+            height: 2.5px;
+            border-radius: 2px;
+            background: var(--accent-gold);
+            box-shadow: 0 1px 4px rgba(255, 209, 102, 0.7);
+        }
+        .event-indicator.multi {
+            background: var(--accent-cyan);
+            box-shadow: 0 1px 4px rgba(72, 202, 228, 0.7);
+        }
+
+        .events-panel {
+            position: relative;
+            z-index: 2;
+            flex-grow: 1;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .events-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            opacity: 0.85;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+            margin-bottom: 8px;
+        }
+        .add-event-mini-btn {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            padding: 2px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .add-event-mini-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .events-list-scroll {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            padding-right: 4px;
+            max-height: 145px;
+        }
+        .events-list-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .events-list-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 4px;
+        }
+
+        .event-item-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 7px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+        .event-item-card:hover {
+            background: rgba(255, 255, 255, 0.22);
+            transform: translateX(2px);
+        }
+
+        .event-badge-day {
+            min-width: 28px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 11px;
+        }
+        .event-details {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .event-title {
+            font-weight: 600;
+        }
+        .event-subtext {
+            font-size: 10px;
+            opacity: 0.75;
+        }
+
+        .bottom-actions {
+            position: relative;
+            z-index: 2;
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .switch-btn {
+            background: rgba(255, 255, 255, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(8px);
+            transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .switch-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+        }
+        .switch-btn:active {
+            transform: translateY(0);
+        }
+
+        .today-quick-btn {
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0 14px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .today-quick-btn:hover {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 16px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: rgba(45, 30, 80, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(25px);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            animation: modalPop 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        @keyframes modalPop {
+            0% { transform: scale(0.92); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        .modal-close:hover { opacity: 1; }
+        .modal-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 10px 12px;
+            color: #fff;
+            font-family: inherit;
+            margin-bottom: 12px;
+            outline: none;
+            font-size: 13px;
+        }
+        .modal-input:focus {
+            border-color: #ffd166;
+            background: rgba(255, 255, 255, 0.18);
+        }
+        .modal-btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-confirm {
+            background: linear-gradient(135deg, #ffd166, #ff8c42);
+            color: #3b1d00;
+        }
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .ai-sparkle-btn {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 107, 158, 0.3));
+            border: 1px solid rgba(255, 215, 0, 0.6);
+            color: #fff;
+            padding: 5px 11px;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 10px rgba(255, 215, 0, 0.2);
+        }
+        .ai-sparkle-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.5), rgba(255, 107, 158, 0.5));
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+        .ai-sparkle-btn:active {
+            transform: scale(0.98);
+        }
+
+        .ai-loading-shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.08) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+            height: 14px;
+            margin: 6px 0;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .ai-insight-content {
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 4px;
+            font-size: 13px;
+            line-height: 1.55;
+            color: rgba(255, 255, 255, 0.95);
+        }
+        .ai-insight-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .ai-insight-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .ai-section-box {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 14px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+        }
+        .ai-section-box h4 {
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--accent-gold);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .kural-quote {
+            font-style: italic;
+            border-left: 3px solid var(--accent-gold);
+            padding-left: 10px;
+            margin: 6px 0;
+            color: #fff;
+            background: rgba(255, 209, 102, 0.08);
+            border-radius: 0 8px 8px 0;
+            padding: 6px 10px;
+        }
+
+        .audio-tts-btn {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .audio-tts-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.02);
+        }
+        .audio-tts-btn.playing {
+            background: #22c55e;
+            border-color: #22c55e;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+            animation: pulseGlow 1.4s infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.75; }
+        }
+
+        .ai-smart-chip {
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            border-radius: 8px;
+            padding: 2px 6px;
+            font-size: 10px;
+            color: #ffd166;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .ai-smart-chip:hover {
+            background: rgba(255, 215, 0, 0.3);
+        }
+
+        .ai-quick-bar {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            overflow-x: auto;
+            padding: 4px 2px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .ai-quick-bar::-webkit-scrollbar {
+            display: none;
+        }
+        .ai-quick-pill {
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.22s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .ai-quick-pill:hover {
+            background: rgba(255, 255, 255, 0.28);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+        .ai-quick-pill.accent-kolam {
+            background: linear-gradient(135deg, rgba(255, 107, 158, 0.25), rgba(255, 215, 0, 0.25));
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+        .ai-quick-pill.accent-rasi {
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.25), rgba(192, 132, 252, 0.25));
+            border-color: rgba(192, 132, 252, 0.5);
+        }
+        .ai-quick-pill.accent-search {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(34, 197, 94, 0.25));
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+
+        .rasi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin: 12px 0;
+        }
+        .rasi-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 8px 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .rasi-card:hover {
+            background: rgba(255, 255, 255, 0.22);
+            transform: translateY(-2px);
+        }
+        .rasi-card.active {
+            background: rgba(255, 215, 0, 0.25);
+            border-color: #ffd166;
+            box-shadow: 0 0 12px rgba(255, 209, 102, 0.4);
+            transform: scale(1.04);
+        }
+        .rasi-icon {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .rasi-name-ta {
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .rasi-name-en {
+            font-size: 8.5px;
+            opacity: 0.75;
+        }
+
+        .kolam-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .kolam-preview-box {
+            width: 100%;
+            height: 260px;
+            border-radius: 18px;
+            border: 1px dashed rgba(255, 255, 255, 0.35);
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .kolam-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 18px;
+        }
+        .kolam-style-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 6px 0;
+            width: 100%;
+        }
+        .kolam-chip {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 12px;
+            padding: 4px 9px;
+            font-size: 10.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .kolam-chip:hover, .kolam-chip.active {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: #ffd166;
+            color: #fff;
+        }
+
+        .search-source-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(56, 189, 248, 0.18);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #7dd3fc;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            text-decoration: none;
+            margin: 3px 2px;
+            transition: background 0.2s;
+        }
+        .search-source-pill:hover {
+            background: rgba(56, 189, 248, 0.35);
+            color: #fff;
+        }
+
+        .ai-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid #ffd166;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 400px) {
+            .scene {
+                height: 640px;
+            }
+            .card-face {
+                padding: 18px 16px;
+            }
+            .month-name {
+                font-size: 26px;
+            }
+            .grid-days {
+                grid-auto-rows: 32px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-orb orb-1" id="orb1"></div>
+    <div class="ambient-orb orb-2" id="orb2"></div>
+    <div class="ambient-orb orb-3" id="orb3"></div>
+
+    <div class="app-wrapper">
+        <div class="top-toolbar">
+            <div class="theme-selector" title="Choose Aesthetic Theme">
+                <div class="theme-dot active" style="background: linear-gradient(135deg, #7db3e3, #d3a4ed);" onclick="setTheme(0)"></div>
+                <div class="theme-dot" style="background: linear-gradient(135deg, #43cea2, #185a9d);" onclick="setTheme(1)"></div>
+                <div class="theme-dot" style="background: linear-gradient(135deg, #ff758c, #ff7eb3);" onclick="setTheme(2)"></div>
+                <div class="theme-dot" style="background: linear-gradient(135deg, #1f1c2c, #928dab);" onclick="setTheme(3)"></div>
+                <div class="theme-dot" style="background: linear-gradient(135deg, #f7971e, #ffd200);" onclick="setTheme(4)"></div>
+            </div>
+
+            <button class="ai-sparkle-btn" onclick="openAIPanchangamModal()" title="AI Panchangam & Astrological Daily Insights">
+                <span>✨</span> <span>AI பஞ்சாங்கம்</span>
+            </button>
+
+            <button class="sound-toggle-btn" id="soundToggleBtn" onclick="toggleSound()" title="Sound Effects">
+                <span id="soundIcon">🔊</span> <span style="font-size: 11px;">Audio</span>
+            </button>
+        </div>
+
+        <!-- NEW: Dedicated Gemini Multi-Modal Action Bar -->
+        <div class="ai-quick-bar">
+            <button class="ai-quick-pill accent-rasi" onclick="openRasiPalanModal()" title="Daily Astrological Forecast for 12 Signs">
+                <span>🪐</span> <span>ராசி பலன்</span>
+            </button>
+            <button class="ai-quick-pill accent-kolam" onclick="openKolamModal()" title="Generate Divine Kolam Art with Gemini 3.1 Flash Image">
+                <span>🎨</span> <span>AI கோலம் & கலை</span>
+            </button>
+            <button class="ai-quick-pill accent-search" onclick="openAstroSearchModal()" title="Google Search Grounded Lunar & Astronomy Data">
+                <span>🌐</span> <span>வானியல் தேடல்</span>
+            </button>
+        </div>
+
+        <div class="scene" id="sceneContainer">
+            <div class="card" id="calendarCard">
+
+                <!-- FRONT FACE: TAMIL CALENDAR -->
+                <div class="card-face card-face-front" id="frontCardFace">
+                    <!-- Header -->
+                    <div class="card-header">
+                        <div class="header-top-row">
+                            <div class="clock-display">
+                                <span class="clock-pulse"></span>
+                                <span id="taLiveClock">00:00:00</span>
+                            </div>
+                            <div class="nav-arrows">
+                                <button class="nav-btn" onclick="prevMonth()" title="முந்தைய மாதம்">◀</button>
+                                <button class="nav-btn" onclick="nextMonth()" title="அடுத்த மாதம்">▶</button>
+                            </div>
+                        </div>
+
+                        <div class="header-title-section">
+                            <div class="month-name" id="taMonthTitle">மாதம்</div>
+                            <div class="year-weekday-badge">
+                                <span id="taYearTitle">2026</span><br>
+                                <span class="badge-sub" id="taWeekdayTitle">ஞாயிறு</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekdays Grid -->
+                    <div class="calendar-grid-wrapper">
+                        <div class="grid-weekdays">
+                            <div class="text-sunday">ஞா</div>
+                            <div>தி</div>
+                            <div>செ</div>
+                            <div>பு</div>
+                            <div>வி</div>
+                            <div>வெ</div>
+                            <div>சனி</div>
+                        </div>
+
+                        <!-- Dynamic Days Grid -->
+                        <div class="grid-days" id="taDaysGrid">
+                            <!-- Populated dynamically by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Events Panel -->
+                    <div class="events-panel">
+                        <div class="events-panel-header">
+                            <span id="taEventsLabel">சிறப்பு நிகழ்வுகள் & பண்டிகைகள்</span>
+                            <div style="display: flex; gap: 4px;">
+                                <button class="ai-sparkle-btn" style="padding: 2px 7px; font-size: 10px;" onclick="openSmartEventModal('ta')" title="AI உதவியுடன் குறிப்பு சேர்க்க">+ 🪄 AI</button>
+                                <button class="add-event-mini-btn" onclick="openAddEventModal('ta')">+ சேர்</button>
+                            </div>
+                        </div>
+                        <div class="events-list-scroll" id="taEventsList">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Actions Bottom -->
+                    <div class="bottom-actions">
+                        <button class="today-quick-btn" onclick="goToToday()" title="இன்று">இன்று</button>
+                        <button class="switch-btn" onclick="flipCard()">
+                            English Calendar <span>🔄</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BACK FACE: ENGLISH CALENDAR -->
+                <div class="card-face card-face-back" id="backCardFace">
+                    <!-- Header -->
+                    <div class="card-header">
+                        <div class="header-top-row">
+                            <div class="clock-display">
+                                <span class="clock-pulse"></span>
+                                <span id="enLiveClock">00:00:00</span>
+                            </div>
+                            <div class="nav-arrows">
+                                <button class="nav-btn" onclick="prevMonth()" title="Previous Month">◀</button>
+                                <button class="nav-btn" onclick="nextMonth()" title="Next Month">▶</button>
+                            </div>
+                        </div>
+
+                        <div class="header-title-section">
+                            <div class="month-name" id="enMonthTitle">MONTH</div>
+                            <div class="year-weekday-badge">
+                                <span id="enYearTitle">2026</span><br>
+                                <span class="badge-sub" id="enWeekdayTitle">SUNDAY</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekdays Grid -->
+                    <div class="calendar-grid-wrapper">
+                        <div class="grid-weekdays">
+                            <div class="text-sunday">SUN</div>
+                            <div>MON</div>
+                            <div>TUE</div>
+                            <div>WED</div>
+                            <div>THU</div>
+                            <div>FRI</div>
+                            <div>SAT</div>
+                        </div>
+
+                        <!-- Dynamic Days Grid -->
+                        <div class="grid-days" id="enDaysGrid">
+                            <!-- Populated dynamically by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Events Panel -->
+                    <div class="events-panel">
+                        <div class="events-panel-header">
+                            <span id="enEventsLabel">Events & Festivals</span>
+                            <div style="display: flex; gap: 4px;">
+                                <button class="ai-sparkle-btn" style="padding: 2px 7px; font-size: 10px;" onclick="openSmartEventModal('en')" title="Add event via Natural Language">+ 🪄 AI</button>
+                                <button class="add-event-mini-btn" onclick="openAddEventModal('en')">+ Add</button>
+                            </div>
+                        </div>
+                        <div class="events-list-scroll" id="enEventsList">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Actions Bottom -->
+                    <div class="bottom-actions">
+                        <button class="today-quick-btn" onclick="goToToday()" title="Go to Today">Today</button>
+                        <button class="switch-btn" onclick="flipCard()">
+                            தமிழ் காலண்டர் <span>🔄</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="eventModal">
+        <div class="modal-box">
+            <div class="modal-title">
+                <span id="modalHeaderTitle">Add Custom Event</span>
+                <button class="modal-close" onclick="closeAddEventModal()">✕</button>
+            </div>
+            <div>
+                <div style="background: rgba(255, 215, 0, 0.1); border: 1px dashed rgba(255, 215, 0, 0.4); border-radius: 12px; padding: 10px; margin-bottom: 12px;">
+                    <label style="font-size: 11px; color: var(--accent-gold); display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>🪄 AI Smart Scheduler (Natural Language)</span>
+                        <span style="font-size: 9.5px; opacity: 0.8;">Tamil or English</span>
+                    </label>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="aiNaturalInput" class="modal-input" style="margin-bottom: 0; padding: 7px 10px; font-size: 12px;" placeholder="e.g. அப்பா பிறந்தநாள் 18 தேதி அல்லது Meeting on 22nd">
+                        <button type="button" class="ai-sparkle-btn" style="white-space: nowrap; padding: 7px 10px;" onclick="processSmartEventWithAI()">AI Fill</button>
+                    </div>
+                </div>
+
+                <label style="font-size: 11px; opacity: 0.8; display: block; margin-bottom: 4px;">Day of Month / தேதி</label>
+                <input type="number" id="eventDayInput" class="modal-input" min="1" max="31" placeholder="e.g. 15">
+                
+                <label style="font-size: 11px; opacity: 0.8; display: block; margin-bottom: 4px;">Event Name / நிகழ்வு பெயர்</label>
+                <input type="text" id="eventTitleInput" class="modal-input" placeholder="e.g. Birthday, Meeting, Holiday">
+
+                <div class="modal-btn-row">
+                    <button class="modal-btn btn-cancel" onclick="closeAddEventModal()">Cancel</button>
+                    <button class="modal-btn btn-confirm" onclick="saveCustomEvent()">Save Event</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="aiModal">
+        <div class="modal-box" style="max-width: 440px;">
+            <div class="modal-title">
+                <span id="aiModalTitle">✨ AI Panchangam & Daily Lore</span>
+                <button class="modal-close" onclick="closeAIModal()">✕</button>
+            </div>
+
+            <div id="aiModalBody">
+                <!-- Populated dynamically: loading shimmer or generated AI sections -->
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 10px;">
+                <button class="audio-tts-btn" id="aiTTSBtn" onclick="readInsightWithTTS()">
+                    <span id="ttsIcon">🎙️</span> <span id="ttsLabel">Listen (குரல் கேட்க)</span>
+                </button>
+                <button class="modal-btn btn-cancel" style="flex: 0 0 auto; padding: 7px 14px; font-size: 12px;" onclick="closeAIModal()">Close / மூடு</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: AI KOLAM & GREETING ART (Gemini 3.1 Flash Image) -->
+    <div class="modal-overlay" id="kolamModal">
+        <div class="modal-box" style="max-width: 420px;">
+            <div class="modal-title">
+                <span id="kolamModalTitle">🎨 AI கோலம் & வாழ்த்துக் கலை</span>
+                <button class="modal-close" onclick="closeKolamModal()">✕</button>
+            </div>
+            
+            <div style="font-size: 11px; opacity: 0.85; margin-bottom: 8px;">
+                Gemini 3.1 Flash Image கொண்டு தேர்ந்தெடுக்கப்பட்ட நாளுக்கான தெய்வீக கோலம் & கலைப்படைப்பை உருவாக்குங்கள்:
+            </div>
+
+            <div class="kolam-style-chips">
+                <div class="kolam-chip active" onclick="selectKolamPrompt('மார்கழி புள்ளி கோலம் (Traditional Dot Kolam with Rice Flour & Rangoli colors)', this)">மார்கழி கோலம்</div>
+                <div class="kolam-chip" onclick="selectKolamPrompt('வண்ண மயமான பூக்கோலம் (Floral Pookkalam with fresh jasmine and marigold petals)', this)">பூக்கோலம்</div>
+                <div class="kolam-chip" onclick="selectKolamPrompt('அகல் விளக்கு தீப அலங்கார வாழ்த்து அட்டை (Sacred Deepam Oil Lamps Greeting card)', this)">தீப அலங்காரம்</div>
+                <div class="kolam-chip" onclick="selectKolamPrompt('கோவில் கோபுர சூரிய உதய ஓவியம் (Dravidian Temple Gopuram Sunrise Watercolor)', this)">கோவில் ஓவியம்</div>
+            </div>
+
+            <input type="text" id="customKolamPrompt" class="modal-input" style="font-size: 12px; margin-bottom: 8px;" placeholder="Custom theme: e.g. Peacock feather rangoli with lotus...">
+
+            <div class="kolam-preview-box" id="kolamPreviewBox">
+                <div id="kolamPlaceholderState" style="text-align: center; padding: 16px; opacity: 0.8;">
+                    <div style="font-size: 32px; margin-bottom: 6px;">🪔</div>
+                    <div style="font-size: 12px;">'உருவாக்குக' பொத்தானை அழுத்தவும்</div>
+                    <div style="font-size: 10px; opacity: 0.7; margin-top: 2px;">Gemini 3.1 Flash Image AI Rendering</div>
+                </div>
+                <div id="kolamLoadingState" style="display: none; flex-direction: column; align-items: center; gap: 8px;">
+                    <div class="ai-spinner"></div>
+                    <div style="font-size: 12px; color: var(--accent-gold);">வரைபடம் உருவாகிறது... (Creating Art)</div>
+                </div>
+                <img id="kolamGeneratedImg" class="kolam-img" style="display: none;" alt="AI Generated Kolam">
+            </div>
+
+            <div class="modal-btn-row" style="margin-top: 10px;">
+                <button class="modal-btn btn-cancel" onclick="closeKolamModal()">மூடு (Close)</button>
+                <button class="modal-btn btn-confirm" id="generateKolamBtn" onclick="generateKolamWithGemini()">✨ உருவாக்குக (Generate Art)</button>
+                <a id="downloadKolamBtn" class="modal-btn btn-confirm" style="display: none; text-align: center; text-decoration: none; background: #22c55e; color: #fff;" download="kolam_art.png">⬇️ சேமி (Save)</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: DAILY RASI PALAN & ZODIAC ENERGY (gemini-3-flash-preview) -->
+    <div class="modal-overlay" id="rasiModal">
+        <div class="modal-box" style="max-width: 440px;">
+            <div class="modal-title">
+                <span>🪐 இன்றைய ராசி பலன் (Daily Horoscope)</span>
+                <button class="modal-close" onclick="closeRasiModal()">✕</button>
+            </div>
+
+            <div style="font-size: 11px; opacity: 0.85; margin-bottom: 6px;">
+                உங்கள் ராசியைத் தேர்ந்தெடுக்கவும் (Choose your zodiac sign):
+            </div>
+
+            <div class="rasi-grid" id="rasiGrid">
+                <!-- Dynamically generated 12 Zodiac buttons -->
+            </div>
+
+            <div id="rasiResultBody" style="min-height: 120px;">
+                <div style="text-align: center; padding: 24px; font-size: 12px; opacity: 0.7;">
+                    ராசியைத் தொட்டு உங்கள் நாளுக்கான பலன்களை அறியுங்கள்.
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 8px;">
+                <button class="audio-tts-btn" id="rasiTTSBtn" style="display: none;" onclick="readRasiWithTTS()">
+                    <span>🎙️</span> <span>கேட்க (Voice)</span>
+                </button>
+                <button class="modal-btn btn-cancel" style="flex: 0 0 auto; padding: 6px 14px; font-size: 11px;" onclick="closeRasiModal()">மூடு</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: GOOGLE SEARCH GROUNDED LUNAR & ASTRONOMY (gemini-3-flash-preview with google_search) -->
+    <div class="modal-overlay" id="astroSearchModal">
+        <div class="modal-box" style="max-width: 440px;">
+            <div class="modal-title">
+                <span>🌐 நேரடி வானியல் & திதி தேடல்</span>
+                <button class="modal-close" onclick="closeAstroSearchModal()">✕</button>
+            </div>
+
+            <div style="font-size: 11px; opacity: 0.85; margin-bottom: 8px;">
+                Google Search Grounding மூலம் நேரடி வானியல், கிரக நிலைகள் மற்றும் பண்டிகை நேரங்களை உடனுக்குடன் பெறுங்கள்:
+            </div>
+
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                <input type="text" id="astroSearchQuery" class="modal-input" style="margin-bottom: 0; font-size: 12px;" placeholder="e.g. இன்றைய பௌர்ணமி நேரம் அல்லது அடுத்த சூரிய கிரகணம்">
+                <button class="ai-sparkle-btn" style="white-space: nowrap; padding: 8px 12px;" onclick="executeAstroSearchWithGrounding()">தேடு</button>
+            </div>
+
+            <div id="astroSearchBody">
+                <div style="text-align: center; padding: 20px; font-size: 12px; opacity: 0.75;">
+                    விருப்பமான கேள்வியை தட்டச்சு செய்து 'தேடு' பொத்தானை அழுத்தவும்.
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 8px;">
+                <button class="modal-btn btn-cancel" style="padding: 6px 14px; font-size: 11px;" onclick="closeAstroSearchModal()">மூடு</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            currentDate: new Date(),
+            viewYear: new Date().getFullYear(),
+            viewMonth: new Date().getMonth(), // 0-indexed
+            selectedDay: new Date().getDate(),
+            isFlipped: false,
+            soundEnabled: true,
+            themeIndex: 0
+        };
+
+        const tamilMonths = [
+            'ஜனவரி', 'பிப்ரவரி', 'மார்ச்', 'ஏப்ரல்', 
+            'மே', 'ஜூன்', 'ஜூலை', 'ஆகஸ்ட்', 
+            'செப்டம்பர்', 'அக்டோபர்', 'நவம்பர்', 'டிசம்பர்'
+        ];
+
+        const englishMonths = [
+            'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 
+            'MAY', 'JUNE', 'JULY', 'AUGUST', 
+            'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+        ];
+
+        const tamilWeekdays = ['ஞாயிறு', 'திங்கள்', 'செவ்வாய்', 'புதன்', 'வியாழன்', 'வெள்ளி', 'சனி'];
+        const englishWeekdays = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+
+        const standardEvents = {
+            // key format: 'MM-DD' (1-indexed month)
+            '1-1': { ta: 'ஆங்கிலப் புத்தாண்டு', en: 'New Year’s Day' },
+            '1-14': { ta: 'போகி பண்டிகை', en: 'Bhogi Festival' },
+            '1-15': { ta: 'பொங்கல் திருநாள்', en: 'Thai Pongal' },
+            '1-16': { ta: 'மாட்டுப் பொங்கல் / திருவள்ளுவர் தினம்', en: 'Mattu Pongal / Thiruvalluvar Day' },
+            '1-17': { ta: 'உழவர் திருநாள் / காணும் பொங்கல்', en: 'Uzhavar Thirunal / Kaanum Pongal' },
+            '1-26': { ta: 'குடியரசு தினம்', en: 'Republic Day (India)' },
+            '2-14': { ta: 'காதலர் தினம்', en: 'Valentine’s Day' },
+            '2-28': { ta: 'தேசிய அறிவியல் தினம்', en: 'National Science Day' },
+            '3-8': { ta: 'சர்வதேச மகளிர் தினம்', en: 'International Women’s Day' },
+            '4-14': { ta: 'தமிழ் புத்தாண்டு / அம்பேத்கர் ஜெயந்தி', en: 'Tamil New Year / Dr. Ambedkar Jayanti' },
+            '5-1': { ta: 'உழைப்பாளர் தினம் (மே தினம்)', en: 'May Day / Labour Day' },
+            '6-5': { ta: 'உலக சுற்றுச்சூழல் தினம்', en: 'World Environment Day' },
+            '6-21': { ta: 'சர்வதேச யோகா தினம்', en: 'International Yoga Day' },
+            '8-15': { ta: 'இந்திய சுதந்திர தினம்', en: 'Independence Day (India)' },
+            '9-5': { ta: 'ஆசிரியர் தினம்', en: 'Teachers’ Day' },
+            '10-2': { ta: 'காந்தி ஜெயந்தி', en: 'Gandhi Jayanti' },
+            '11-14': { ta: 'குழந்தைகள் தினம்', en: 'Children’s Day' },
+            '12-1': { ta: 'உலக எய்ட்ஸ் தினம்', en: 'World AIDS Day' },
+            '12-22': { ta: 'தேசிய கணித தினம் (ராமானுஜன்)', en: 'National Mathematics Day' },
+            '12-24': { ta: 'கிறிஸ்துமஸ் ஈவ்', en: 'Christmas Eve' },
+            '12-25': { ta: 'கிறிஸ்துமஸ் பெருநாள்', en: 'Christmas Day' },
+            '12-31': { ta: 'ஆண்டு இறுதி நாள்', en: 'New Year’s Eve' }
+        };
+
+        // User custom events stored in memory & localStorage
+        let userEvents = {};
+        try {
+            const stored = localStorage.getItem('glass_calendar_events');
+            if (stored) {
+                userEvents = JSON.parse(stored);
+            }
+        } catch (e) {
+            userEvents = {};
+        }
+
+        const apiKey = ""; // Canvas runtime injects the API key automatically
+        let currentInsightTextForSpeech = "";
+        let isTTSPlaying = false;
+        let activeAudioSource = null;
+
+        let selectedKolamStyle = "மார்கழி புள்ளி கோலம் (Traditional Dot Kolam with Rice Flour & Rangoli colors)";
+
+        function selectKolamPrompt(stylePrompt, element) {
+            selectedKolamStyle = stylePrompt;
+            document.querySelectorAll('.kolam-chip').forEach(el => el.classList.remove('active'));
+            if (element) element.classList.add('active');
+            playSfx('tap');
+        }
+
+        function openKolamModal() {
+            const modal = document.getElementById('kolamModal');
+            const day = state.selectedDay;
+            const monthName = state.isFlipped ? englishMonths[state.viewMonth] : tamilMonths[state.viewMonth];
+            document.getElementById('kolamModalTitle').innerHTML = `🎨 AI கோலம் (${day} ${monthName} ${state.viewYear})`;
+            modal.classList.add('active');
+            playSfx('tap');
+        }
+
+        function closeKolamModal() {
+            document.getElementById('kolamModal').classList.remove('active');
+            playSfx('tap');
+        }
+
+        async function generateKolamWithGemini() {
+            const previewBox = document.getElementById('kolamPreviewBox');
+            const placeholder = document.getElementById('kolamPlaceholderState');
+            const loadingState = document.getElementById('kolamLoadingState');
+            const imgEl = document.getElementById('kolamGeneratedImg');
+            const genBtn = document.getElementById('generateKolamBtn');
+            const dlBtn = document.getElementById('downloadKolamBtn');
+            const customInput = document.getElementById('customKolamPrompt').value.trim();
+
+            placeholder.style.display = 'none';
+            imgEl.style.display = 'none';
+            dlBtn.style.display = 'none';
+            loadingState.style.display = 'flex';
+            genBtn.disabled = true;
+            genBtn.style.opacity = '0.6';
+
+            const userPromptText = customInput 
+                ? `Create a stunning Indian cultural Kolam artwork: ${customInput}. Photorealistic, vibrant symmetry, top-down view.`
+                : `A sacred, traditional South Indian ${selectedKolamStyle}. Intricate geometry, glowing festive lamps, rice powder, auspicious symbols, ultra high details, top-down camera perspective.`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{
+                    role: 'user',
+                    parts: [{ text: userPromptText }]
+                }],
+                generationConfig: {
+                    responseModalities: ['IMAGE'],
+                    imageConfig: { aspectRatio: "1:1" }
+                }
+            };
+
+            try {
+                const result = await fetchGeminiWithBackoff(apiUrl, payload);
+                const part = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+                if (part && part.inlineData && part.inlineData.data) {
+                    const dataUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                    imgEl.src = dataUrl;
+                    imgEl.style.display = 'block';
+                    loadingState.style.display = 'none';
+
+                    dlBtn.href = dataUrl;
+                    dlBtn.style.display = 'inline-block';
+                    playSfx('success');
+                } else {
+                    throw new Error("No image data found in candidate");
+                }
+            } catch (err) {
+                console.error("Kolam Generation Error", err);
+                loadingState.style.display = 'none';
+                placeholder.style.display = 'block';
+                placeholder.innerHTML = `
+                    <div style="font-size: 24px; color: #ff8c8c;">⚠️</div>
+                    <div style="font-size: 12px; color: #ffb4b4; margin-top: 4px;">படம் உருவாக்குவதில் தாமதம். மீண்டும் முயற்சிக்கவும்.</div>
+                `;
+            } finally {
+                genBtn.disabled = false;
+                genBtn.style.opacity = '1';
+            }
+        }
+
+        const rasiList = [
+            { id: 'mesham', ta: 'மேஷம்', en: 'Aries', icon: '♈' },
+            { id: 'rishabham', ta: 'ரிஷபம்', en: 'Taurus', icon: '♉' },
+            { id: 'mithunam', ta: 'மிதுனம்', en: 'Gemini', icon: '♊' },
+            { id: 'kadagam', ta: 'கடகம்', en: 'Cancer', icon: '♋' },
+            { id: 'simmam', ta: 'சிம்மம்', en: 'Leo', icon: '♌' },
+            { id: 'kanni', ta: 'கன்னி', en: 'Virgo', icon: '♍' },
+            { id: 'thulam', ta: 'துலாம்', en: 'Libra', icon: '♎' },
+            { id: 'viruchigam', ta: 'விருச்சிகம்', en: 'Scorpio', icon: '♏' },
+            { id: 'dhanusu', ta: 'தனுசு', en: 'Sagittarius', icon: '♐' },
+            { id: 'makaram', ta: 'மகரம்', en: 'Capricorn', icon: '♑' },
+            { id: 'kumbam', ta: 'கும்பம்', en: 'Aquarius', icon: '♒' },
+            { id: 'meenam', ta: 'மீனம்', en: 'Pisces', icon: '♓' }
+        ];
+
+        let selectedRasiId = null;
+        let currentRasiSpeechText = "";
+
+        function openRasiPalanModal() {
+            const modal = document.getElementById('rasiModal');
+            const grid = document.getElementById('rasiGrid');
+            grid.innerHTML = '';
+
+            rasiList.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'rasi-card' + (selectedRasiId === item.id ? ' active' : '');
+                card.innerHTML = `
+                    <span class="rasi-icon">${item.icon}</span>
+                    <div class="rasi-name-ta">${item.ta}</div>
+                    <div class="rasi-name-en">${item.en}</div>
+                `;
+                card.onclick = () => selectAndFetchRasi(item);
+                grid.appendChild(card);
+            });
+
+            modal.classList.add('active');
+            playSfx('tap');
+
+            if (!selectedRasiId) {
+                // Auto-select first sign by default
+                selectAndFetchRasi(rasiList[0]);
+            }
+        }
+
+        function closeRasiModal() {
+            document.getElementById('rasiModal').classList.remove('active');
+            playSfx('tap');
+        }
+
+        async function selectAndFetchRasi(rasiObj) {
+            selectedRasiId = rasiObj.id;
+            document.querySelectorAll('.rasi-card').forEach(el => el.classList.remove('active'));
+            event?.currentTarget?.classList.add('active');
+
+            const body = document.getElementById('rasiResultBody');
+            const ttsBtn = document.getElementById('rasiTTSBtn');
+            ttsBtn.style.display = 'none';
+
+            body.innerHTML = `
+                <div style="text-align: center; padding: 12px; font-size: 12px; color: var(--accent-gold);">
+                    🔮 ${rasiObj.ta} (${rasiObj.en}) ராசி பலன் கணிக்கப்படுகிறது...
+                </div>
+                <div class="ai-loading-shimmer" style="width: 80%;"></div>
+                <div class="ai-loading-shimmer" style="width: 90%;"></div>
+                <div class="ai-loading-shimmer" style="width: 65%;"></div>
+            `;
+            playSfx('tap');
+
+            const day = state.selectedDay;
+            const month = state.viewMonth + 1;
+            const year = state.viewYear;
+
+            const systemPrompt = `You are a warm, wise traditional Vedic astrologer. Provide accurate, encouraging daily horoscope predictions in Tamil and English for the requested zodiac sign. Respond in structured JSON.`;
+            const userPrompt = `Zodiac Sign: ${rasiObj.ta} (${rasiObj.en}). Date: ${day}/${month}/${year}. Provide daily forecast (பொதுப் பலன்), career & wealth guidance (தொழில்/பொருளாதாரம்), lucky color (அதிர்ஷ்ட நிறம்), lucky number (அதிர்ஷ்ட எண்), and a sacred one-line peace mantra (இன்றைய வழிபாடு/மந்திரம்).`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            dailyForecastTa: { type: "STRING", description: "Daily general horoscope in Tamil" },
+                            dailyForecastEn: { type: "STRING", description: "Daily forecast in English" },
+                            careerWealth: { type: "STRING", description: "Career & finance insight in Tamil" },
+                            luckyColor: { type: "STRING", description: "Auspicious color of the day" },
+                            luckyNumber: { type: "INTEGER", description: "Auspicious number 1-9" },
+                            auspiciousDirection: { type: "STRING", description: "Auspicious direction e.g. வடக்கு / North" },
+                            mantra: { type: "STRING", description: "Simple devotional affirmation / mantra" }
+                        },
+                        required: ["dailyForecastTa", "luckyColor", "luckyNumber", "mantra"]
+                    }
+                }
+            };
+
+            try {
+                const data = await fetchGeminiWithBackoff(apiUrl, payload);
+                const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!rawJson) throw new Error("No Rasi JSON");
+                const res = JSON.parse(rawJson);
+
+                currentRasiSpeechText = `${rasiObj.ta} ராசி பலன். ${res.dailyForecastTa}. தொழில்: ${res.careerWealth || ''}. அதிர்ஷ்ட நிறம்: ${res.luckyColor}. அதிர்ஷ்ட எண்: ${res.luckyNumber}. வழிபாடு: ${res.mantra}`;
+
+                body.innerHTML = `
+                    <div class="ai-insight-content" style="max-height: 220px;">
+                        <div class="ai-section-box" style="margin-bottom: 6px;">
+                            <h4>🌟 ${rasiObj.icon} ${rasiObj.ta} - இன்றைய பலன்</h4>
+                            <div style="font-size: 12.5px; line-height: 1.5;">${escapeHtml(res.dailyForecastTa)}</div>
+                            ${res.dailyForecastEn ? `<div style="font-size: 11px; opacity: 0.8; margin-top: 4px; font-style: italic;">${escapeHtml(res.dailyForecastEn)}</div>` : ''}
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; font-size: 11px; margin-bottom: 6px;">
+                            <div class="ai-section-box" style="padding: 6px; text-align: center; margin-bottom: 0;">
+                                <div style="opacity: 0.75; font-size: 9.5px;">அதிர்ஷ்ட நிறம்</div>
+                                <b style="color: var(--accent-gold);">${escapeHtml(res.luckyColor)}</b>
+                            </div>
+                            <div class="ai-section-box" style="padding: 6px; text-align: center; margin-bottom: 0;">
+                                <div style="opacity: 0.75; font-size: 9.5px;">அதிர்ஷ்ட எண்</div>
+                                <b style="color: #22c55e; font-size: 13px;">${res.luckyNumber}</b>
+                            </div>
+                            <div class="ai-section-box" style="padding: 6px; text-align: center; margin-bottom: 0;">
+                                <div style="opacity: 0.75; font-size: 9.5px;">நல் திசை</div>
+                                <b style="color: #7dd3fc;">${escapeHtml(res.auspiciousDirection || 'கிழக்கு')}</b>
+                            </div>
+                        </div>
+
+                        <div class="ai-section-box" style="border-color: rgba(255, 215, 0, 0.4); background: rgba(255, 215, 0, 0.08); margin-bottom: 0; padding: 6px 10px;">
+                            <h4 style="margin-bottom: 2px;">🪔 இன்றைய வழிபாடு</h4>
+                            <div style="font-size: 11.5px; font-weight: 500;">${escapeHtml(res.mantra)}</div>
+                        </div>
+                    </div>
+                `;
+                ttsBtn.style.display = 'inline-flex';
+                playSfx('success');
+            } catch (err) {
+                console.error("Rasi fetch error", err);
+                body.innerHTML = `
+                    <div style="padding: 16px; text-align: center; color: #ffb4b4;">
+                        <p>ராசி பலன் கணிக்க இயலவில்லை.</p>
+                        <p style="font-size: 11px; opacity: 0.8;">Unable to calculate horoscope right now. Please retry.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function readRasiWithTTS() {
+            if (!currentRasiSpeechText) return;
+            const ttsBtn = document.getElementById('rasiTTSBtn');
+
+            if (isTTSPlaying && activeAudioSource) {
+                try { activeAudioSource.stop(); } catch (e) {}
+                isTTSPlaying = false;
+                ttsBtn.classList.remove('playing');
+                ttsBtn.innerHTML = `<span>🎙️</span> <span>கேட்க (Voice)</span>`;
+                return;
+            }
+
+            ttsBtn.classList.add('playing');
+            ttsBtn.innerHTML = `<span>⏳</span> <span>பேசுகிறது...</span>`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            const speechPrompt = `Speak gently and clearly in Tamil: ${currentRasiSpeechText.slice(0, 280)}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: speechPrompt }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: "Aoede" }
+                        }
+                    }
+                },
+                model: "gemini-2.5-flash-preview-tts"
+            };
+
+            try {
+                const response = await fetchGeminiWithBackoff(apiUrl, payload);
+                const part = response?.candidates?.[0]?.content?.parts?.[0];
+                const audioBase64 = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType || "audio/pcm;rate=24000";
+
+                if (audioBase64) {
+                    const rateMatch = mimeType.match(/rate=(\d+)/);
+                    const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
+                    const pcmBuffer = base64ToArrayBuffer(audioBase64);
+                    const pcm16 = new Int16Array(pcmBuffer);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+
+                    const audio = new Audio(audioUrl);
+                    activeAudioSource = audio;
+                    isTTSPlaying = true;
+                    ttsBtn.innerHTML = `<span>⏹️</span> <span>நிறுத்து (Stop)</span>`;
+
+                    audio.onended = () => {
+                        isTTSPlaying = false;
+                        ttsBtn.classList.remove('playing');
+                        ttsBtn.innerHTML = `<span>🎙️</span> <span>கேட்க (Voice)</span>`;
+                    };
+
+                    await audio.play();
+                }
+            } catch (err) {
+                console.error("TTS Rasi error", err);
+                isTTSPlaying = false;
+                ttsBtn.classList.remove('playing');
+                ttsBtn.innerHTML = `<span>🎙️</span> <span>கேட்க (Voice)</span>`;
+            }
+        }
+
+        function openAstroSearchModal() {
+            const modal = document.getElementById('astroSearchModal');
+            modal.classList.add('active');
+            playSfx('tap');
+            const input = document.getElementById('astroSearchQuery');
+            if (input && !input.value) {
+                input.value = `${tamilMonths[state.viewMonth]} ${state.viewYear} தமிழ் பௌர்ணமி & அமாவாசை நேரங்கள்`;
+            }
+        }
+
+        function closeAstroSearchModal() {
+            document.getElementById('astroSearchModal').classList.remove('active');
+            playSfx('tap');
+        }
+
+        async function executeAstroSearchWithGrounding() {
+            const input = document.getElementById('astroSearchQuery');
+            const query = input.value.trim();
+            if (!query) return;
+
+            const body = document.getElementById('astroSearchBody');
+            body.innerHTML = `
+                <div style="text-align: center; padding: 12px; font-size: 12px; color: #7dd3fc;">
+                    🌐 கூகிள் தேடல் மூலம் நேரடித் தகவல் பெறப்படுகிறது... (Searching live web data)...
+                </div>
+                <div class="ai-loading-shimmer" style="width: 85%;"></div>
+                <div class="ai-loading-shimmer" style="width: 95%;"></div>
+                <div class="ai-loading-shimmer" style="width: 70%;"></div>
+            `;
+            playSfx('tap');
+
+            const systemPrompt = `You are an expert Vedic calendar and astronomy researcher. Use Google Search grounding to give accurate, real-world verified timings for moon phases (Tithi), eclipse schedules, planet visibilities, or public festival dates. Answer concisely in Tamil with key English terms.`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: query }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            try {
+                const response = await fetchGeminiWithBackoff(apiUrl, payload);
+                const candidate = response?.candidates?.[0];
+                const text = candidate?.content?.parts?.[0]?.text;
+
+                if (!text) throw new Error("No grounded text response");
+
+                // Extract grounding sources
+                let sources = [];
+                const groundingMetadata = candidate.groundingMetadata;
+                if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                    sources = groundingMetadata.groundingAttributions
+                        .map(attr => ({
+                            uri: attr.web?.uri,
+                            title: attr.web?.title || 'Web Reference'
+                        }))
+                        .filter(s => s.uri && s.title);
+                }
+
+                let sourcesHtml = '';
+                if (sources.length > 0) {
+                    sourcesHtml = `
+                        <div style="margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 8px;">
+                            <div style="font-size: 10px; opacity: 0.8; margin-bottom: 4px;">🔗 Google Search ஆதாரங்கள்:</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                ${sources.slice(0, 4).map(s => `
+                                    <a href="${escapeHtml(s.uri)}" target="_blank" rel="noopener noreferrer" class="search-source-pill">
+                                        🌐 ${escapeHtml(s.title.slice(0, 24))}...
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                body.innerHTML = `
+                    <div class="ai-insight-content" style="max-height: 250px;">
+                        <div class="ai-section-box">
+                            <h4>🔍 நேரடி விடை (Verified Live Insight)</h4>
+                            <div style="font-size: 12.5px; line-height: 1.55; white-space: pre-line;">${escapeHtml(text)}</div>
+                            ${sourcesHtml}
+                        </div>
+                    </div>
+                `;
+                playSfx('success');
+            } catch (err) {
+                console.error("Search grounding error", err);
+                body.innerHTML = `
+                    <div style="padding: 16px; text-align: center; color: #ffb4b4;">
+                        <p>வானியல் தேடல் தகவலைப் பெற முடியவில்லை.</p>
+                        <p style="font-size: 11px; opacity: 0.8;">Unable to complete web-grounded search. Please try a different query.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function fetchGeminiWithBackoff(url, payload, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) {
+                        if (response.status === 429 && i < retries - 1) {
+                            await new Promise(r => setTimeout(r, delay * Math.pow(2, i)));
+                            continue;
+                        }
+                        throw new Error(`API error HTTP ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (err) {
+                    if (i === retries - 1) throw err;
+                    await new Promise(r => setTimeout(r, delay * Math.pow(2, i)));
+                }
+            }
+        }
+
+        // Conversion helper: Signed PCM16 into browser-playable WAV container
+        function pcmToWav(pcm16, sampleRate) {
+            const numChannels = 1;
+            const bytesPerSample = 2;
+            const blockAlign = numChannels * bytesPerSample;
+            const byteRate = sampleRate * blockAlign;
+            const dataSize = pcm16.length * bytesPerSample;
+            const buffer = new ArrayBuffer(44 + dataSize);
+            const view = new DataView(buffer);
+
+            function writeString(offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + dataSize, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); // PCM format
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, 16, true); // 16-bit
+            writeString(36, 'data');
+            view.setUint32(40, dataSize, true);
+
+            for (let i = 0; i < pcm16.length; i++) {
+                view.setInt16(44 + i * 2, pcm16[i], true);
+            }
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        let audioCtx = null;
+        function playSfx(type) {
+            if (!state.soundEnabled) return;
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'flip') {
+                    // Soft swoosh tone
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(140, now + 0.18);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                    osc.start(now);
+                    osc.stop(now + 0.18);
+                } else if (type === 'tap') {
+                    // Crisp light tap
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(580, now);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'success') {
+                    // Chime
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+            } catch (err) {
+                console.error("Audio error", err);
+            }
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            icon.textContent = state.soundEnabled ? '🔊' : '🔇';
+            if (state.soundEnabled) playSfx('tap');
+        }
+
+        const themes = [
+            {
+                // Lilac dream (default)
+                bg1: '#7db3e3', bg2: '#d3a4ed', bg3: '#fca5a5',
+                orb1: 'radial-gradient(circle, rgba(255, 222, 89, 0.75), rgba(255, 140, 66, 0.4))',
+                orb2: 'radial-gradient(circle, rgba(255, 107, 158, 0.75), rgba(162, 59, 214, 0.5))',
+                orb3: 'radial-gradient(circle, rgba(78, 205, 196, 0.7), rgba(85, 98, 246, 0.5))'
+            },
+            {
+                // Emerald Mint
+                bg1: '#11998e', bg2: '#38ef7d', bg3: '#0575e6',
+                orb1: 'radial-gradient(circle, rgba(56, 239, 125, 0.75), rgba(17, 153, 142, 0.4))',
+                orb2: 'radial-gradient(circle, rgba(72, 202, 228, 0.7), rgba(0, 119, 182, 0.4))',
+                orb3: 'radial-gradient(circle, rgba(255, 255, 255, 0.6), rgba(56, 239, 125, 0.3))'
+            },
+            {
+                // Rose Quartz
+                bg1: '#ff758c', bg2: '#ff7eb3', bg3: '#fed6e3',
+                orb1: 'radial-gradient(circle, rgba(255, 117, 140, 0.8), rgba(254, 214, 227, 0.4))',
+                orb2: 'radial-gradient(circle, rgba(255, 182, 193, 0.8), rgba(255, 105, 180, 0.4))',
+                orb3: 'radial-gradient(circle, rgba(255, 215, 0, 0.6), rgba(255, 126, 179, 0.4))'
+            },
+            {
+                // Cosmic Midnight
+                bg1: '#0f172a', bg2: '#312e81', bg3: '#4c1d95',
+                orb1: 'radial-gradient(circle, rgba(129, 140, 248, 0.6), rgba(99, 102, 241, 0.2))',
+                orb2: 'radial-gradient(circle, rgba(236, 72, 153, 0.6), rgba(168, 85, 247, 0.2))',
+                orb3: 'radial-gradient(circle, rgba(45, 212, 191, 0.5), rgba(59, 130, 246, 0.3))'
+            },
+            {
+                // Sunset Gold
+                bg1: '#f12711', bg2: '#f5af19', bg3: '#ff7e5f',
+                orb1: 'radial-gradient(circle, rgba(255, 215, 0, 0.85), rgba(241, 39, 17, 0.4))',
+                orb2: 'radial-gradient(circle, rgba(255, 94, 98, 0.8), rgba(245, 175, 25, 0.4))',
+                orb3: 'radial-gradient(circle, rgba(255, 235, 59, 0.7), rgba(255, 87, 34, 0.4))'
+            }
+        ];
+
+        function setTheme(index) {
+            state.themeIndex = index;
+            const t = themes[index];
+            document.body.style.background = `linear-gradient(135deg, ${t.bg1} 0%, ${t.bg2} 50%, ${t.bg3} 100%)`;
+            document.getElementById('orb1').style.background = t.orb1;
+            document.getElementById('orb2').style.background = t.orb2;
+            document.getElementById('orb3').style.background = t.orb3;
+
+            document.querySelectorAll('.theme-dot').forEach((el, idx) => {
+                el.classList.toggle('active', idx === index);
+            });
+            playSfx('tap');
+        }
+
+        function updateLiveClocks() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeStr = `${hours}:${minutes}:${seconds}`;
+
+            const taClock = document.getElementById('taLiveClock');
+            const enClock = document.getElementById('enLiveClock');
+            if (taClock) taClock.textContent = timeStr;
+            if (enClock) enClock.textContent = timeStr;
+        }
+        setInterval(updateLiveClocks, 1000);
+        updateLiveClocks();
+
+        function renderCalendar() {
+            const year = state.viewYear;
+            const month = state.viewMonth;
+
+            // Update Header labels
+            document.getElementById('taMonthTitle').textContent = tamilMonths[month];
+            document.getElementById('enMonthTitle').textContent = englishMonths[month];
+
+            document.getElementById('taYearTitle').textContent = year;
+            document.getElementById('enYearTitle').textContent = year;
+
+            // Day of week for current or selected day
+            const referenceDate = new Date(year, month, Math.min(state.selectedDay, new Date(year, month + 1, 0).getDate()));
+            const weekdayIndex = referenceDate.getDay();
+            document.getElementById('taWeekdayTitle').textContent = tamilWeekdays[weekdayIndex];
+            document.getElementById('enWeekdayTitle').textContent = englishWeekdays[weekdayIndex];
+
+            // Render day grid for both Front and Back
+            renderDaysGrid('taDaysGrid', year, month);
+            renderDaysGrid('enDaysGrid', year, month);
+
+            // Render Events list for selected/current month
+            renderEventsList('taEventsList', 'ta', year, month);
+            renderEventsList('enEventsList', 'en', year, month);
+        }
+
+        function renderDaysGrid(containerId, year, month) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            const firstDayIndex = new Date(year, month, 1).getDay(); // 0 is Sunday
+            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+            const prevMonthDays = new Date(year, month, 0).getDate();
+
+            const today = new Date();
+            const isCurrentMonth = (today.getFullYear() === year && today.getMonth() === month);
+
+            // Previous month trailing days
+            for (let i = firstDayIndex - 1; i >= 0; i--) {
+                const dayNum = prevMonthDays - i;
+                const cell = document.createElement('div');
+                cell.className = 'day-cell other-month';
+                cell.textContent = dayNum;
+                container.appendChild(cell);
+            }
+
+            // Current month days
+            for (let day = 1; day <= totalDaysInMonth; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+                cell.textContent = day;
+
+                const dayOfWeek = (firstDayIndex + day - 1) % 7;
+                if (dayOfWeek === 0) {
+                    cell.classList.add('text-sunday');
+                }
+
+                // Today indicator
+                if (isCurrentMonth && day === today.getDate()) {
+                    cell.classList.add('today');
+                }
+
+                // Selected day indicator
+                if (day === state.selectedDay) {
+                    cell.classList.add('selected');
+                }
+
+                // Check for events on this day
+                const eventKey = `${month + 1}-${day}`;
+                const hasStandardEvent = standardEvents[eventKey];
+                const yearEventKey = `${year}-${month + 1}-${day}`;
+                const hasUserEvent = userEvents[yearEventKey] || userEvents[eventKey];
+
+                if (hasStandardEvent || hasUserEvent) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'event-indicator' + ((hasStandardEvent && hasUserEvent) ? ' multi' : '');
+                    cell.appendChild(indicator);
+                }
+
+                // Click handler
+                cell.addEventListener('click', () => {
+                    state.selectedDay = day;
+                    playSfx('tap');
+                    renderCalendar();
+                });
+
+                container.appendChild(cell);
+            }
+
+            // Next month leading days to complete the 35 or 42 grid slots
+            const totalCellsSoFar = firstDayIndex + totalDaysInMonth;
+            const remainingCells = (totalCellsSoFar <= 35) ? (35 - totalCellsSoFar) : (42 - totalCellsSoFar);
+
+            for (let nextDay = 1; nextDay <= remainingCells; nextDay++) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell other-month';
+                cell.textContent = nextDay;
+                container.appendChild(cell);
+            }
+        }
+
+        function renderEventsList(containerId, lang, year, month) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            const currentMonthNum = month + 1;
+            const eventsFound = [];
+
+            // 1. Gather standard events for this month
+            Object.keys(standardEvents).forEach(key => {
+                const [m, d] = key.split('-').map(Number);
+                if (m === currentMonthNum) {
+                    eventsFound.push({
+                        day: d,
+                        title: standardEvents[key][lang],
+                        type: 'standard'
+                    });
+                }
+            });
+
+            // 2. Gather custom user events for this month
+            Object.keys(userEvents).forEach(key => {
+                const parts = key.split('-').map(Number);
+                if (parts.length === 3 && parts[0] === year && parts[1] === currentMonthNum) {
+                    eventsFound.push({
+                        day: parts[2],
+                        title: userEvents[key],
+                        type: 'user'
+                    });
+                } else if (parts.length === 2 && parts[0] === currentMonthNum) {
+                    eventsFound.push({
+                        day: parts[1],
+                        title: userEvents[key],
+                        type: 'user'
+                    });
+                }
+            });
+
+            // Sort by day order
+            eventsFound.sort((a, b) => a.day - b.day);
+
+            if (eventsFound.length === 0) {
+                const emptyItem = document.createElement('div');
+                emptyItem.className = 'event-item-card';
+                emptyItem.style.opacity = '0.7';
+                emptyItem.innerHTML = `
+                    <div class="event-details" style="text-align: center; font-style: italic;">
+                        ${lang === 'ta' ? 'இந்த மாதத்தில் சிறப்பு நிகழ்வுகள் இல்லை' : 'No scheduled events for this month'}
+                    </div>
+                `;
+                container.appendChild(emptyItem);
+                return;
+            }
+
+            eventsFound.forEach(ev => {
+                const item = document.createElement('div');
+                item.className = 'event-item-card';
+                if (ev.day === state.selectedDay) {
+                    item.style.borderColor = 'rgba(255, 209, 102, 0.7)';
+                    item.style.background = 'rgba(255, 255, 255, 0.24)';
+                }
+
+                item.innerHTML = `
+                    <div class="event-badge-day">${ev.day}</div>
+                    <div class="event-details">
+                        <div class="event-title">${escapeHtml(ev.title)}</div>
+                        <div class="event-subtext">${ev.type === 'user' ? (lang === 'ta' ? 'தனிப்பயன் குறிப்பு' : 'Custom Event') : (lang === 'ta' ? 'பண்டிகை / சிறப்பு தினம்' : 'Holiday / Festival')}</div>
+                    </div>
+                    <button class="ai-sparkle-btn" style="padding: 3px 6px; font-size: 10px; margin-left: auto;" onclick="event.stopPropagation(); openFestivalLoreAI('${escapeHtml(ev.title)}', ${ev.day}, '${lang}')" title="AI மூலம் அறிவோம்">
+                        ✨ ${lang === 'ta' ? 'அறிவோம்' : 'Lore'}
+                    </button>
+                `;
+
+                // Clicking an event highlights that day in the calendar grid
+                item.addEventListener('click', () => {
+                    state.selectedDay = ev.day;
+                    playSfx('tap');
+                    renderCalendar();
+                });
+
+                container.appendChild(item);
+            });
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function prevMonth() {
+            if (state.viewMonth === 0) {
+                state.viewMonth = 11;
+                state.viewYear--;
+            } else {
+                state.viewMonth--;
+            }
+            playSfx('tap');
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            if (state.viewMonth === 11) {
+                state.viewMonth = 0;
+                state.viewYear++;
+            } else {
+                state.viewMonth++;
+            }
+            playSfx('tap');
+            renderCalendar();
+        }
+
+        function goToToday() {
+            const today = new Date();
+            state.viewYear = today.getFullYear();
+            state.viewMonth = today.getMonth();
+            state.selectedDay = today.getDate();
+            playSfx('tap');
+            renderCalendar();
+        }
+
+        function flipCard() {
+            const card = document.getElementById('calendarCard');
+            state.isFlipped = !state.isFlipped;
+            card.classList.toggle('is-flipped', state.isFlipped);
+            playSfx('flip');
+        }
+
+        let activeModalLang = 'en';
+
+        function openAddEventModal(lang) {
+            activeModalLang = lang;
+            const modal = document.getElementById('eventModal');
+            const titleEl = document.getElementById('modalHeaderTitle');
+            const dayInput = document.getElementById('eventDayInput');
+            const titleInput = document.getElementById('eventTitleInput');
+
+            titleEl.textContent = lang === 'ta' ? 'புதிய நிகழ்வைச் சேர்க்க' : 'Add New Event';
+            dayInput.value = state.selectedDay;
+            titleInput.value = '';
+            modal.classList.add('active');
+            playSfx('tap');
+            titleInput.focus();
+        }
+
+        function closeAddEventModal() {
+            document.getElementById('eventModal').classList.remove('active');
+            playSfx('tap');
+        }
+
+        function openSmartEventModal(lang) {
+            activeModalLang = lang;
+            openAddEventModal(lang);
+            const naturalInput = document.getElementById('aiNaturalInput');
+            if (naturalInput) {
+                naturalInput.value = '';
+                naturalInput.focus();
+            }
+        }
+
+        async function processSmartEventWithAI() {
+            const naturalInput = document.getElementById('aiNaturalInput');
+            const promptText = naturalInput.value.trim();
+            if (!promptText) return;
+
+            naturalInput.placeholder = "Gemini AI is parsing...";
+            naturalInput.disabled = true;
+
+            const systemPrompt = `You are a calendar assistant. The current calendar view is year ${state.viewYear}, month ${state.viewMonth + 1} (${englishMonths[state.viewMonth]}). Extract the calendar event details from the user's natural language input (which may be in Tamil or English). Return valid JSON.`;
+            const userPrompt = `Input: "${promptText}". Extract the day of the month (1-31) and concise event title in both English and Tamil if possible.`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            day: { type: "INTEGER", description: "Day of the month 1-31" },
+                            title: { type: "STRING", description: "Clean, concise title of the event" },
+                            notes: { type: "STRING", description: "Brief advice or suggestion" }
+                        },
+                        required: ["day", "title"]
+                    }
+                }
+            };
+
+            try {
+                const data = await fetchGeminiWithBackoff(apiUrl, payload);
+                const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (rawJson) {
+                    const parsed = JSON.parse(rawJson);
+                    if (parsed.day) {
+                        document.getElementById('eventDayInput').value = parsed.day;
+                    }
+                    if (parsed.title) {
+                        document.getElementById('eventTitleInput').value = parsed.title;
+                    }
+                    playSfx('success');
+                }
+            } catch (err) {
+                console.error("AI Smart Event parsing error", err);
+                // Fallback: simple day detection if any
+                const match = promptText.match(/\b([1-9]|[12][0-9]|3[01])\b/);
+                if (match) {
+                    document.getElementById('eventDayInput').value = match[1];
+                }
+                document.getElementById('eventTitleInput').value = promptText;
+            } finally {
+                naturalInput.disabled = false;
+                naturalInput.placeholder = "e.g. அப்பா பிறந்தநாள் 18 தேதி அல்லது Meeting on 22nd";
+            }
+        }
+
+        async function openAIPanchangamModal() {
+            const modal = document.getElementById('aiModal');
+            const modalTitle = document.getElementById('aiModalTitle');
+            const body = document.getElementById('aiModalBody');
+            const ttsBtn = document.getElementById('aiTTSBtn');
+
+            const monthNameTa = tamilMonths[state.viewMonth];
+            const monthNameEn = englishMonths[state.viewMonth];
+            const day = state.selectedDay;
+            const year = state.viewYear;
+
+            modalTitle.innerHTML = `✨ பஞ்சாங்கம் & திருக்குறள் (${day} ${state.isFlipped ? monthNameEn : monthNameTa} ${year})`;
+            modal.classList.add('active');
+            playSfx('tap');
+
+            // Render loading shimmer
+            body.innerHTML = `
+                <div style="text-align: center; margin-bottom: 12px; font-size: 13px; color: var(--accent-gold);">
+                    🔮 கணிப்பு தயாராகிறது (Consulting Gemini AI)...
+                </div>
+                <div class="ai-loading-shimmer" style="width: 70%;"></div>
+                <div class="ai-loading-shimmer" style="width: 90%;"></div>
+                <div class="ai-loading-shimmer" style="width: 85%;"></div>
+                <div class="ai-loading-shimmer" style="width: 60%;"></div>
+            `;
+            ttsBtn.style.display = 'none';
+
+            const systemPrompt = `You are a Vedic Tamil Astrologer and Cultural Scholar. Provide authentic, auspicious, and uplifting daily Panchangam information and a relevant Thirukkural couplet for the requested date. Respond in structured JSON.`;
+            const userPrompt = `Provide authentic Panchangam details and daily guidance for date: Year ${year}, Month ${state.viewMonth + 1} (${monthNameEn} / ${monthNameTa}), Day ${day}. Include Tamil Year/Tithi, Auspicious time (நல்ல நேரம்), Star (நட்சத்திரம்), Thirukkural of the day with meaning, and a blessing / good deed for the day in both Tamil and English.`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            tithi: { type: "STRING", description: "திதி (e.g. வளர்பிறை துவாதசி / Sukla Dwadasi)" },
+                            nakshatra: { type: "STRING", description: "நட்சத்திரம் (Star)" },
+                            nallaNeram: { type: "STRING", description: "நல்ல நேரம் (Auspicious Time window)" },
+                            rahuKalam: { type: "STRING", description: "இராகு காலம் (Rahu Kaalam)" },
+                            thirukkural: {
+                                type: "OBJECT",
+                                properties: {
+                                    kural: { type: "STRING", description: "Tamil Thirukkural 2 lines" },
+                                    kuralEnglish: { type: "STRING", description: "English translation of the Kural" },
+                                    meaning: { type: "STRING", description: "Simple Tamil meaning / விளக்கம்" }
+                                },
+                                required: ["kural", "meaning"]
+                            },
+                            dailyBlessingTa: { type: "STRING", description: "Daily positive advice / இன்றைய சிந்தனை in Tamil" },
+                            dailyBlessingEn: { type: "STRING", description: "Daily positive advice in English" }
+                        },
+                        required: ["tithi", "nakshatra", "nallaNeram", "thirukkural", "dailyBlessingTa"]
+                    }
+                }
+            };
+
+            try {
+                const data = await fetchGeminiWithBackoff(apiUrl, payload);
+                const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!rawJson) throw new Error("No response content");
+                const res = JSON.parse(rawJson);
+
+                currentInsightTextForSpeech = `இன்றைய பஞ்சாங்கம். திதி: ${res.tithi}. நட்சத்திரம்: ${res.nakshatra}. நல்ல நேரம்: ${res.nallaNeram}. இன்றைய திருக்குறள்: ${res.thirukkural.kural}. விளக்கம்: ${res.thirukkural.meaning}. இன்றைய சிந்தனை: ${res.dailyBlessingTa}`;
+
+                body.innerHTML = `
+                    <div class="ai-insight-content">
+                        <div class="ai-section-box">
+                            <h4>🪔 பஞ்சாங்க குறிப்புகள் (Panchangam)</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; margin-top: 4px;">
+                                <div><b style="opacity:0.75;">திதி:</b> ${escapeHtml(res.tithi)}</div>
+                                <div><b style="opacity:0.75;">நட்சத்திரம்:</b> ${escapeHtml(res.nakshatra)}</div>
+                                <div><b style="color:#22c55e;">நல்ல நேரம்:</b> ${escapeHtml(res.nallaNeram)}</div>
+                                <div><b style="color:#f87171;">இராகு காலம்:</b> ${escapeHtml(res.rahuKalam || '12:00 - 01:30 PM')}</div>
+                            </div>
+                        </div>
+
+                        <div class="ai-section-box">
+                            <h4>📜 இன்றைய திருக்குறள் (Thirukkural)</h4>
+                            <div class="kural-quote">
+                                ${escapeHtml(res.thirukkural.kural).replace(/\n/g, '<br>')}
+                            </div>
+                            <div style="font-size: 11.5px; opacity: 0.9; margin-top: 4px;">
+                                <b>விளக்கம்:</b> ${escapeHtml(res.thirukkural.meaning)}
+                            </div>
+                            ${res.thirukkural.kuralEnglish ? `<div style="font-size: 11px; opacity: 0.75; font-style: italic; margin-top: 4px;">"${escapeHtml(res.thirukkural.kuralEnglish)}"</div>` : ''}
+                        </div>
+
+                        <div class="ai-section-box" style="border-color: rgba(255, 209, 102, 0.4); background: rgba(255, 209, 102, 0.08);">
+                            <h4>☀️ இன்றைய சிந்தனை & நற்பலன்</h4>
+                            <div style="font-size: 12.5px;">${escapeHtml(res.dailyBlessingTa)}</div>
+                            ${res.dailyBlessingEn ? `<div style="font-size: 11px; opacity: 0.8; margin-top: 3px;">${escapeHtml(res.dailyBlessingEn)}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+                ttsBtn.style.display = 'inline-flex';
+                playSfx('success');
+            } catch (err) {
+                console.error("Panchangam error", err);
+                body.innerHTML = `
+                    <div style="padding: 16px; text-align: center; color: #ffb4b4;">
+                        <p style="margin-bottom: 8px;">பஞ்சாங்கம் பெறுவதில் தாமதம் ஏற்பட்டது.</p>
+                        <p style="font-size: 12px; opacity: 0.8;">Unable to retrieve Panchangam right now. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function openFestivalLoreAI(festivalTitle, day, lang) {
+            const modal = document.getElementById('aiModal');
+            const modalTitle = document.getElementById('aiModalTitle');
+            const body = document.getElementById('aiModalBody');
+            const ttsBtn = document.getElementById('aiTTSBtn');
+
+            modalTitle.innerHTML = `✨ ${festivalTitle} - சிறப்பு வரலாறு`;
+            modal.classList.add('active');
+            playSfx('tap');
+
+            body.innerHTML = `
+                <div style="text-align: center; margin-bottom: 12px; font-size: 13px; color: var(--accent-gold);">
+                    📖 பண்டிகை வரலாறு ஆராய்கிறது (Exploring with Gemini AI)...
+                </div>
+                <div class="ai-loading-shimmer" style="width: 80%;"></div>
+                <div class="ai-loading-shimmer" style="width: 95%;"></div>
+                <div class="ai-loading-shimmer" style="width: 88%;"></div>
+                <div class="ai-loading-shimmer" style="width: 70%;"></div>
+            `;
+            ttsBtn.style.display = 'none';
+
+            const systemPrompt = `You are a cultural historian specializing in Indian and Tamil festivals, customs, rituals, and festive cuisine. Provide engaging, authentic stories and traditional cooking recommendations. Respond in structured JSON.`;
+            const userPrompt = `Provide the cultural history, spiritual meaning, traditional rituals (பூஜை வழிபாட்டு முறைகள்), and traditional festive food/prasadam recipes for "${festivalTitle}" celebrated on day ${day} of month ${state.viewMonth + 1}. Include both Tamil and English summaries.`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            historyStoryTa: { type: "STRING", description: "Brief historical & mythological background in Tamil" },
+                            historyStoryEn: { type: "STRING", description: "Historical background in English" },
+                            ritualsTa: { type: "STRING", description: "How to celebrate, rituals and worship steps in Tamil" },
+                            festiveDishName: { type: "STRING", description: "Traditional sweet or festive dish name" },
+                            dishPreparation: { type: "STRING", description: "How this traditional prasadam/food is prepared" },
+                            festiveWish: { type: "STRING", description: "A warm festive greeting blessing" }
+                        },
+                        required: ["historyStoryTa", "ritualsTa", "festiveDishName", "dishPreparation"]
+                    }
+                }
+            };
+
+            try {
+                const data = await fetchGeminiWithBackoff(apiUrl, payload);
+                const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!rawJson) throw new Error("No lore content");
+                const res = JSON.parse(rawJson);
+
+                currentInsightTextForSpeech = `${festivalTitle} பண்டிகையின் வரலாறு. ${res.historyStoryTa}. வழிபாட்டு முறைகள்: ${res.ritualsTa}. பாரம்பரிய உணவு: ${res.festiveDishName}. ${res.festiveWish || ''}`;
+
+                body.innerHTML = `
+                    <div class="ai-insight-content">
+                        <div class="ai-section-box">
+                            <h4>🏛️ பண்டிகையின் வரலாறு & முக்கியத்துவம்</h4>
+                            <div style="font-size: 12.5px; line-height: 1.5;">${escapeHtml(res.historyStoryTa)}</div>
+                            ${res.historyStoryEn ? `<div style="font-size: 11px; opacity: 0.8; margin-top: 6px; font-style: italic;">${escapeHtml(res.historyStoryEn)}</div>` : ''}
+                        </div>
+
+                        <div class="ai-section-box">
+                            <h4>🪔 வழிபாட்டு முறைகள் & கொண்டாட்டம் (Rituals)</h4>
+                            <div style="font-size: 12px; line-height: 1.5;">${escapeHtml(res.ritualsTa)}</div>
+                        </div>
+
+                        <div class="ai-section-box" style="border-color: rgba(255, 215, 0, 0.4); background: rgba(255, 215, 0, 0.08);">
+                            <h4>🍲 பாரம்பரிய பிரசாதம்: ${escapeHtml(res.festiveDishName)}</h4>
+                            <div style="font-size: 12px; line-height: 1.5;">${escapeHtml(res.dishPreparation)}</div>
+                        </div>
+
+                        ${res.festiveWish ? `
+                        <div style="text-align: center; font-size: 13px; font-weight: 700; color: var(--accent-gold); margin-top: 8px;">
+                            🎉 ${escapeHtml(res.festiveWish)}
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                ttsBtn.style.display = 'inline-flex';
+                playSfx('success');
+            } catch (err) {
+                console.error("Festival lore error", err);
+                body.innerHTML = `
+                    <div style="padding: 16px; text-align: center; color: #ffb4b4;">
+                        <p>பண்டிகை விவரங்களை பெறுவதில் பிழை ஏற்பட்டது.</p>
+                        <p style="font-size: 12px; opacity: 0.8;">Could not retrieve lore at this moment. Please check connection.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function readInsightWithTTS() {
+            if (!currentInsightTextForSpeech) return;
+
+            const ttsBtn = document.getElementById('aiTTSBtn');
+            const ttsLabel = document.getElementById('ttsLabel');
+            const ttsIcon = document.getElementById('ttsIcon');
+
+            if (isTTSPlaying && activeAudioSource) {
+                try {
+                    activeAudioSource.stop();
+                } catch (e) {}
+                isTTSPlaying = false;
+                ttsBtn.classList.remove('playing');
+                ttsLabel.textContent = "Listen (குரல் கேட்க)";
+                ttsIcon.textContent = "🎙️";
+                return;
+            }
+
+            ttsLabel.textContent = "Generating Voice...";
+            ttsIcon.textContent = "⏳";
+            ttsBtn.classList.add('playing');
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            const speechPrompt = `Speak in a serene, warm, expressive tone: ${currentInsightTextForSpeech.slice(0, 320)}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: speechPrompt }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: "Aoede" }
+                        }
+                    }
+                },
+                model: "gemini-2.5-flash-preview-tts"
+            };
+
+            try {
+                const response = await fetchGeminiWithBackoff(apiUrl, payload);
+                const part = response?.candidates?.[0]?.content?.parts?.[0];
+                const audioBase64 = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType || "audio/pcm;rate=24000";
+
+                if (audioBase64) {
+                    const rateMatch = mimeType.match(/rate=(\d+)/);
+                    const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
+                    const pcmBuffer = base64ToArrayBuffer(audioBase64);
+                    const pcm16 = new Int16Array(pcmBuffer);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+
+                    const audio = new Audio(audioUrl);
+                    activeAudioSource = audio;
+                    isTTSPlaying = true;
+                    ttsLabel.textContent = "Stop Playing";
+                    ttsIcon.textContent = "⏹️";
+
+                    audio.onended = () => {
+                        isTTSPlaying = false;
+                        ttsBtn.classList.remove('playing');
+                        ttsLabel.textContent = "Listen (குரல் கேட்க)";
+                        ttsIcon.textContent = "🎙️";
+                    };
+
+                    await audio.play();
+                } else {
+                    throw new Error("No audio payload returned");
+                }
+            } catch (err) {
+                console.error("TTS playback error", err);
+                isTTSPlaying = false;
+                ttsBtn.classList.remove('playing');
+                ttsLabel.textContent = "Listen (குரல் கேட்க)";
+                ttsIcon.textContent = "🎙️";
+            }
+        }
+
+        function closeAIModal() {
+            if (activeAudioSource && isTTSPlaying) {
+                try { activeAudioSource.stop(); } catch (e) {}
+                isTTSPlaying = false;
+            }
+            document.getElementById('aiModal').classList.remove('active');
+            playSfx('tap');
+        }
+
+        function saveCustomEvent() {
+            const day = parseInt(document.getElementById('eventDayInput').value, 10);
+            const title = document.getElementById('eventTitleInput').value.trim();
+
+            if (!day || day < 1 || day > 31 || !title) {
+                return;
+            }
+
+            const key = `${state.viewYear}-${state.viewMonth + 1}-${day}`;
+            userEvents[key] = title;
+
+            try {
+                localStorage.setItem('glass_calendar_events', JSON.stringify(userEvents));
+            } catch (e) {
+                console.error("Storage error", e);
+            }
+
+            state.selectedDay = day;
+            playSfx('success');
+            closeAddEventModal();
+            renderCalendar();
+        }
+
+        const scene = document.getElementById('sceneContainer');
+        const card = document.getElementById('calendarCard');
+
+        let bounds;
+        function updateBounds() {
+            bounds = scene.getBoundingClientRect();
+        }
+        window.addEventListener('resize', updateBounds);
+        updateBounds();
+
+        document.addEventListener('mousemove', (e) => {
+            if (!bounds) return;
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            const cardCenterX = bounds.left + bounds.width / 2;
+            const cardCenterY = bounds.top + bounds.height / 2;
+
+            const deltaX = (mouseX - cardCenterX) / (window.innerWidth / 2);
+            const deltaY = (mouseY - cardCenterY) / (window.innerHeight / 2);
+
+            const rotateX = deltaY * -12; // tilt vertical
+            const baseRotateY = deltaX * 14; // tilt horizontal
+            const flipOffset = state.isFlipped ? 180 : 0;
+
+            card.style.transform = `rotateX(${rotateX}deg) rotateY(${flipOffset + baseRotateY}deg)`;
+        });
+
+        // Reset orientation on mouse leave
+        document.addEventListener('mouseleave', () => {
+            const flipOffset = state.isFlipped ? 180 : 0;
+            card.style.transform = `rotateX(0deg) rotateY(${flipOffset}deg)`;
+        });
+
+        // Device orientation support for mobile tilt
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', (e) => {
+                if (e.gamma !== null && e.beta !== null) {
+                    const tiltX = Math.max(-15, Math.min(15, e.beta - 45)) * 0.4;
+                    const tiltY = Math.max(-15, Math.min(15, e.gamma)) * 0.4;
+                    const flipOffset = state.isFlipped ? 180 : 0;
+                    card.style.transform = `rotateX(${-tiltX}deg) rotateY(${flipOffset + tiltY}deg)`;
+                }
+            });
+        }
+
+        window.onload = function() {
+            renderCalendar();
+            updateBounds();
+        };
+    </script>
+</body>
+</html>
